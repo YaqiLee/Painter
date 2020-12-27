@@ -1,6 +1,11 @@
 import React from "react";
+import { brush } from "./config";
 
 class Pencil extends React.Component {
+  // 这是一个函数
+  finishShape = null;
+  historys = [];
+
   constructor(props) {
     super(props);
   }
@@ -28,30 +33,65 @@ class Pencil extends React.Component {
     this.ctx.lineTo(x, y);
     this.ctx.strokeStyle = color;
     this.ctx.stroke();
+    this.ctx.closePath();
   }
-
-  drawRect(x, y, w, h, { lineWidth, color } = this.props) {
-    this.clearRect(0, 0);
-    this.putImageData();
+  // 单一职责
+  drawRect(x, y, w, h, { lineWidth, color, brush } = this.props) {
     this.ctx.lineWidth = lineWidth;
     this.ctx.beginPath();
     this.ctx.rect(x, y, w, h);
-    this.ctx.strokeStyle = color;
-    this.ctx.stroke();
+    this.setShapeType(brush)(color);
     this.ctx.closePath();
+  }
+
+  drawCircle(x, y, r, { lineWidth, color, brush } = this.props) {
+    this.ctx.lineWidth = lineWidth;
+    this.ctx.beginPath();
+    this.ctx.arc(x, y, r, 0, 2 * Math.PI);
+    this.setShapeType(brush)(color);
+  }
+
+  initDraw() {
+    // 清空画布
+    this.clearRect(0, 0);
+    // 放入之前的数据
+    this.putImageData()
   }
 
   clearRect(x, y, width = this.canvasWidth, height = this.canvasHeight) {
     this.ctx.clearRect(x, y, width, height);
   }
+  // 是否空心
+  setShapeType(brushType) {
+    if (this.finishShape !== null) {
+      return this.finishShape;
+    }
+    //
+    let shapes = [brush.oRect, brush.oCircle];
+    this.finishShape = shapes.includes(brushType)
+      ? this.strokeShape
+      : this.fillShape;
+    return this.finishShape;
+  }
 
   getImageData(width = this.canvasWidth, height = this.canvasHeight) {
     this.imgdata = this.ctx.getImageData(0, 0, width, height);
+    return this.imgdata;
   }
 
   putImageData(x = 0, y = 0, imagedata = this.imgdata) {
     if (!imagedata) return;
-    this.ctx.putImageData(imagedata,x,y);
+    this.ctx.putImageData(imagedata, x, y);
   }
+
+  fillShape = (color) => {
+    this.ctx.fillStyle = color;
+    this.ctx.fill();
+  };
+
+  strokeShape = (color) => {
+    this.ctx.strokeStyle = color;
+    this.ctx.stroke();
+  };
 }
 export default Pencil;

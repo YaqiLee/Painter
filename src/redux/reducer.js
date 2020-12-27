@@ -1,8 +1,15 @@
-import { CHANGE_WEIGHT, CHANGE_COLOR, CHANGE_CANVAS_RECT } from "./action";
+import { brush } from "../utils/config";
+import {
+  CHANGE_WEIGHT,
+  CHANGE_COLOR,
+  CHANGE_CANVAS_RECT,
+  CHANGE_BRUSH,
+} from "./action";
 
 const initialState = {
   lineWidth: 2,
   color: "#000000",
+  brush: brush.curve,
   canvas: {
     width: 0,
     height: 0,
@@ -16,8 +23,10 @@ export default function reducer(state = initialState, action) {
     case CHANGE_COLOR:
       return Object.assign({}, state, { color: action.payload });
     case CHANGE_CANVAS_RECT:
-      return Object.assign({}, state, Object.assign(state.canvas, action.payload));
-
+      const canvas = Object.assign(state.canvas, action.payload);
+      return Object.assign({}, state, canvas);
+    case CHANGE_BRUSH:
+      return Object.assign({}, state, { brush: action.payload });
     default:
       return state;
   }

@@ -1,37 +1,49 @@
 import React from "react";
 import { connect } from "react-redux";
 import styled from "styled-components";
-import { CHANGE_COLOR, CHANGE_WEIGHT } from "./redux/action";
+import { CHANGE_BRUSH, CHANGE_COLOR, CHANGE_WEIGHT } from "./redux/action";
 import "./toolbar.scss";
+import { brush } from "./utils/config";
+import CurveLine from "./components/CurveLine";
 
-const PencilWeight = styled.div`
-  ${(props) => {
-    return `::after {
-      content: "";
-      display: inline-block;
-      width: 66%;
-      height: ${props.weight}px;
-      background-color: ${props.color};
-    }`;
-  }}
-`;
-
-const OReact = styled.div`
+const Line = styled.div`
   ${(props) => {
     return `
-    width: 20px;
-    height: 20px;
-    border: ${props.weight}px solid ${props.color};
-    display: inline-block;
-    vertical-align: text-top;
+      width: 50%;
+      height: ${props.weight}px;
+      max-height: 30px;
+      background-color: ${props.color};
     `;
   }}
+`;
+const baseShapeTpl = (props) => `
+  width: 20px;
+  height: 20px;
+  border: ${props.weight}px solid ${props.color};
+  display: inline-block;
+  vertical-align: text-top;
+  background: ${props.fill ? props.color : "transparent"};
+`;
+
+const Rect = styled.div`
+  ${(props) => baseShapeTpl(props)}
+`;
+
+const Circle = styled.div`
+  ${(props) => {
+    return `
+      ${baseShapeTpl(props)}
+      border-radius: 50%;
+    `;
+  }}}
 `;
 
 @connect(
   (state) => {
     return {
       color: state.color,
+      brush: state.brush,
+      lineWidth: state.lineWidth,
     };
   },
   (dispatch) => {
@@ -48,19 +60,57 @@ const OReact = styled.div`
           payload: weight,
         });
       },
+      changeBrush: (brushType) => {
+        dispatch({
+          type: CHANGE_BRUSH,
+          payload: brushType,
+        });
+      },
     };
   }
 )
 class Toolbar extends React.Component {
   constructor(props) {
     super(props);
-
-    this.state = {
-      weight: 1,
-      selectIndex: -1,
-      selectCateIndex: -1,
-    };
   }
+  // 激活状态class值
+  ACTIVE_CLASS = "active";
+
+  state = {
+    weight: 1,
+    selectIndex: -1,
+    selectCateIndex: -1,
+  };
+
+  brushs = [
+    {
+      custom: "true",
+      brush: brush.curve,
+      child: CurveLine,
+    },
+    {
+      brush: brush.line,
+      child: Line,
+    },
+    {
+      brush: brush.oRect,
+      child: Rect,
+    },
+    {
+      brush: brush.rect,
+      fill: "true",
+      child: Rect,
+    },
+    {
+      brush: brush.oCircle,
+      child: Circle,
+    },
+    {
+      brush: brush.circle,
+      fill: "true",
+      child: Circle,
+    },
+  ];
 
   onChangeColor = (e) => {
     this.props.changeColor(e.target.value);
@@ -68,9 +118,12 @@ class Toolbar extends React.Component {
 
   onSelect = (e) => {
     const i = e.currentTarget.getAttribute("data-index");
-    e.currentTarget.classList.toggle("active");
     e.preventDefault();
     this.setState({ selectIndex: i });
+  };
+
+  onCancelSelect = () => {
+    this.setState({ selectIndex: -1 });
   };
   // 笔粗细
   onSelectGor = (e, index, weight) => {
@@ -79,10 +132,21 @@ class Toolbar extends React.Component {
     e.stopPropagation();
   };
 
-  onSelectRect = (e) => {
-    const index = e.currentTarget.getAttribute("data-index");
-    this.setState({ selectCateIndex: index });
+  onSelectShape = (e) => {
+    const brush = e.currentTarget.getAttribute("data-brush");
+    this.props.changeBrush(brush);
     e.stopPropagation();
+  };
+
+  // 下载图片
+  onDownload = (e) => {
+    this.props.download.next(e.currentTarget);
+    e.stopPropagation();
+  };
+
+  onCancel = (e) => {
+    this.onSelect(e);
+    this.props.cancel.next();
   };
 
   render() {
@@ -92,7 +156,7 @@ class Toolbar extends React.Component {
           <li
             data-index="1"
             onClick={this.onSelect}
-            className={this.state.selectIndex == 1 ? "active" : ""}
+            className={this.state.selectIndex == 1 ? this.ACTIVE_CLASS : ""}
           >
             <div className="item">画笔</div>
             <div className="item-categories">
@@ -106,11 +170,13 @@ class Toolbar extends React.Component {
               {[2, 5].map((it, i) => {
                 return (
                   <div
-                    key={i}
+                    key={"sub-" + i}
                     onClick={(e) => this.onSelectGor(e, i, it)}
-                    className={this.state.selectCateIndex == i ? "active" : ""}
+                    className={
+                      this.state.selectCateIndex == i ? this.ACTIVE_CLASS : ""
+                    }
                   >
-                    <PencilWeight color={this.props.color} weight={it} />
+                    <Line color={this.props.color} weight={it} />
                   </div>
                 );
               })}
@@ -119,20 +185,54 @@ class Toolbar extends React.Component {
           <li
             data-index="2"
             onClick={this.onSelect}
-            className={this.state.selectIndex == 2 ? "active" : ""}
+            className={this.state.selectIndex == 2 ? this.ACTIVE_CLASS : ""}
           >
-            <div className="item">矩形</div>
+            <div className="item">形状</div>
             <div className="item-categories">
-              <div
-                data-index="rect-1"
-                onClick={this.onSelectRect}
-                className={
-                  this.state.selectCateIndex == "rect-1" ? "active" : ""
-                }
-              >
-                <OReact color={this.props.color} weight={this.state.weight} />
+              {this.brushs.map((b, i) => {
+                return (
+                  <div
+                    key={i}
+                    data-brush={b.brush}
+                    onClick={this.onSelectShape}
+                    className={
+                      this.props.brush == b.brush ? this.ACTIVE_CLASS : ""
+                    }
+                  >
+                    {
+                      <b.child
+                        fill={b.fill}
+                        color={this.props.color}
+                        weight={this.state.weight}
+                      />
+                    }
+                  </div>
+                );
+              })}
+            </div>
+          </li>
+          <li
+            data-index="3"
+            onClick={this.onSelect}
+            className={this.state.selectIndex == 3 ? this.ACTIVE_CLASS : ""}
+          >
+            <div className="item">工具</div>
+            <div className="item-categories">
+              <div>
+                <a href="" onClick={this.onDownload} download="download">
+                  下载
+                </a>
               </div>
             </div>
+          </li>
+          <li
+            data-index="4"
+            onMouseDown={this.onCancel}
+            onMouseUp={this.onCancelSelect}
+            className={this.state.selectIndex == 4 ? this.ACTIVE_CLASS : ""}
+          >
+            <div className="item">撤销</div>
+            <div className="item-categories"></div>
           </li>
         </ul>
       </div>

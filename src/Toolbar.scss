@@ -1,8 +1,15 @@
-$asideWidth: 100px;
+$asideWidth: 100px; // 菜单宽度
+$base-color: #70a1ff; // 主菜单背景色
+$primary-color: #ed52b6; // 激活时背景色
+$animation-timing: 0.3s;
+
+%active {
+  box-shadow: inset $asideWidth 0 10px $primary-color;
+}
 
 .toolbar {
   position: absolute;
-  left: 5px;
+  left: 0;
   top: 15vh;
 
   ul {
@@ -14,6 +21,7 @@ $asideWidth: 100px;
       display: flex;
       align-items: center;
       justify-content: flex-start;
+      cursor: pointer;
     }
 
     li .item {
@@ -27,16 +35,16 @@ $asideWidth: 100px;
       background-color: #70a1ff;
       border-bottom: 1px solid white;
       z-index: 2;
+      transition: $animation-timing;
     }
 
     li.active .item {
-      background-color: #5352ed;
+      @extend %active;
     }
 
     li .item-categories {
       transition: all 0.3s linear;
-      transform: translateX(-300px) rotateY(-180deg);
-      opacity: 0;
+      transform: translateX(-300px);
       position: absolute;
       left: $asideWidth;
       top: 0;
@@ -48,28 +56,23 @@ $asideWidth: 100px;
       z-index: 1;
 
       & > div {
+        display: flex;
+        justify-content: center;
+        align-items: center;
         height: 42px;
-        line-height: 42px;
-        text-align: center;
         border-bottom: 1px solid white;
         margin-bottom: -1px;
+        cursor: pointer;
+        transition: $animation-timing;
       }
 
       & > div.active {
-        background: #5352ed;
-        box-shadow: 2px 2px 2px #5352ed;
+        @extend %active;
       }
     }
 
     li.active .item-categories {
-      transform: translateX(0) rotateY(180deg);
-      opacity: 1;
+      transform: translateX(0);
     }
-  }
-
-  .o-react {
-    width: 20px;
-    height: 20px;
-    border: 1px;
   }
 }
