@@ -149,6 +149,11 @@ class Toolbar extends React.Component {
     this.props.cancel.next();
   };
 
+  // 不用保持激活状态的组件
+  dynamicChild = () => {
+    
+  }
+
   render() {
     return (
       <div className="toolbar">
@@ -223,6 +228,7 @@ class Toolbar extends React.Component {
                   下载
                 </a>
               </div>
+              <div>显示背景</div>
             </div>
           </li>
           <li

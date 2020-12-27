@@ -1,16 +1,13 @@
 import React from "react";
+import { connect } from "react-redux";
 import {
   debounceTime,
-  map,
-  skipWhile,
-  takeUntil,
-  takeWhile,
-  tap,
+  map
 } from "rxjs/operators";
-import { connect } from "react-redux";
+import CanvasBackground from "./CanvasBackground";
+import "./Palette.scss";
 import { brush } from "./utils/config";
 import Pencil from "./utils/pencil";
-
 @connect((state) => {
   return {
     color: state.color,
@@ -127,12 +124,15 @@ class Palette extends Pencil {
   }
 
   render() {
+    const { clientWidth, clientHeight } = this.props;
     return (
       <>
+        <CanvasBackground width={clientWidth} height={clientHeight} />
         <canvas
+          id="canvas"
           ref={this.canvas$}
-          width={this.props.canvas.width}
-          height={this.props.canvas.height}
+          width={clientWidth}
+          height={clientHeight}
           onMouseUp={this.onMouseUp}
           onMouseMove={this.onMouseMove}
           onMouseDown={this.onMouseDown}

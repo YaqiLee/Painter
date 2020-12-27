@@ -18,6 +18,12 @@ class Pencil extends React.Component {
     return this.props.canvas.height;
   }
 
+  drawTable() {
+    this.ctxbg.moveTo(0, 0)
+    this.ctxbg.lineTo(500, 500);
+    this.ctxbg.stroke();
+  }
+
   drawArc(x, y, r, { color } = this.props) {
     this.fillStyle = color;
     this.ctx.beginPath();
