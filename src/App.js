@@ -12,8 +12,12 @@ class App extends React.Component {
     width: 0,
   };
 
+  // 下载
   downSubject = new Subject();
+  // 撤销
   cancelSubject = new Subject();
+  // 清空
+  clearSubject = new Subject();
 
   initContext(ctx) {
     this.ctx = ctx;
@@ -26,10 +30,19 @@ class App extends React.Component {
   }
 
   render() {
+    const commonProps = {
+      clear: this.clearSubject,
+    };
+
     return (
       <main>
-        <Toolbar download={this.downSubject} cancel={this.cancelSubject} />
+        <Toolbar
+          {...commonProps}
+          download={this.downSubject}
+          cancel={this.cancelSubject}
+        />
         <Palette
+          {...commonProps}
           download={this.downSubject}
           cancel={this.cancelSubject}
           clientHeight={this.state.height}

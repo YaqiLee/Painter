@@ -116,6 +116,10 @@ class Palette extends Pencil {
         this.imgdata = img;
         this.ctx.putImageData(img, 0, 0);
       });
+    
+      this.props.clear.subscribe(() => {
+        this.initCanvas();
+      })
   }
 
   componentWillUnmount() {

@@ -82,6 +82,14 @@ class Toolbar extends React.Component {
     selectCateIndex: -1,
   };
 
+  events = {
+    clear: "clear",
+  };
+
+  eventsObj = {
+    [this.events.clear]: this.props.clear,
+  };
+
   brushs = [
     {
       custom: "true",
@@ -149,10 +157,11 @@ class Toolbar extends React.Component {
     this.props.cancel.next();
   };
 
-  // 不用保持激活状态的组件
-  dynamicChild = () => {
-    
-  }
+  onClick = (e) => {
+    const event = e.currentTarget.getAttribute("data-event");
+    this.eventsObj[event].next();
+    e.stopPropagation();
+  };
 
   render() {
     return (
@@ -228,12 +237,17 @@ class Toolbar extends React.Component {
                   下载
                 </a>
               </div>
-              <div>显示背景</div>
+              <div
+                data-event={this.events.clear}
+                onClick={this.onClick}
+              >
+                清空画布
+              </div>
             </div>
           </li>
           <li
             data-index="4"
-            onMouseDown={this.onCancel}
+            onMouseOver={this.onCancel}
             onMouseUp={this.onCancelSelect}
             className={this.state.selectIndex == 4 ? this.ACTIVE_CLASS : ""}
           >

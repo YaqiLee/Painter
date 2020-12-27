@@ -38,6 +38,7 @@ $animation-timing: 0.3s;
       transition: $animation-timing;
     }
 
+    li .item:hover,
     li.active .item {
       @extend %active;
     }
@@ -66,13 +67,16 @@ $animation-timing: 0.3s;
         transition: $animation-timing;
       }
 
+      & > div:hover,
       & > div.active {
         @extend %active;
       }
+
     }
 
     li.active .item-categories {
       transform: translateX(0);
     }
   }
+
 }

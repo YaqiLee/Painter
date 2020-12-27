@@ -18,6 +18,14 @@ class Pencil extends React.Component {
     return this.props.canvas.height;
   }
 
+  initCanvas() {
+    // 清空画布
+    this.clearRect(0, 0);
+    this.getImageData();
+    // 清空历史记录
+    this.historys = [this.imgdata];
+  }
+
   drawTable() {
     this.ctxbg.moveTo(0, 0)
     this.ctxbg.lineTo(500, 500);
