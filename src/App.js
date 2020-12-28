@@ -7,10 +7,7 @@ import { CHANGE_CANVAS_RECT } from "./redux/action";
 import Toolbar from "./Toolbar";
 
 class App extends React.Component {
-  state = {
-    height: 0,
-    width: 0,
-  };
+  state = { height: 0, width: 0 };
 
   // 下载
   downSubject = new Subject();
@@ -18,33 +15,41 @@ class App extends React.Component {
   cancelSubject = new Subject();
   // 清空
   clearSubject = new Subject();
+  // 鼠标按键事件
+  keydownSubject = new Subject();
+  keyupSubject = new Subject();
 
-  initContext(ctx) {
-    this.ctx = ctx;
-  }
+  commonProps = {
+    clear: this.clearSubject,
+    keyup: this.keyupSubject,
+    keydown: this.keydownSubject,
+    download: this.downSubject,
+    cancel: this.cancelSubject,
+  };
 
   componentDidMount() {
     let { clientHeight, clientWidth } = document.body;
     this.setState({ height: clientHeight, width: clientWidth });
     this.props.changeCanvas(clientWidth, clientHeight);
+    // document事件只在这里注册一次,防止重复
+    document.addEventListener("keydown", this.onKeyDown);
+    document.addEventListener("keyup", this.onKeyup);
   }
 
-  render() {
-    const commonProps = {
-      clear: this.clearSubject,
-    };
+  onKeyup = () => {
+    this.keyupSubject.next(-1);
+  };
 
+  onKeyDown = (e) => {
+    this.keydownSubject.next(e.keyCode);
+  };
+
+  render() {
     return (
       <main>
-        <Toolbar
-          {...commonProps}
-          download={this.downSubject}
-          cancel={this.cancelSubject}
-        />
+        <Toolbar {...this.commonProps} />
         <Palette
-          {...commonProps}
-          download={this.downSubject}
-          cancel={this.cancelSubject}
+          {...this.commonProps}
           clientHeight={this.state.height}
           clientWidth={this.state.width}
         />

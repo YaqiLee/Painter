@@ -6,3 +6,7 @@ export const brush = {
   circle: 'circle', // 填充圆
   oCircle: 'oCircle', // 空心圆
 }
+
+export const KEY = {
+  SHIFT: 16
+}

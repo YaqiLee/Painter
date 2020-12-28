@@ -247,7 +247,7 @@ class Toolbar extends React.Component {
           </li>
           <li
             data-index="4"
-            onMouseOver={this.onCancel}
+            onMouseDown={this.onCancel}
             onMouseUp={this.onCancelSelect}
             className={this.state.selectIndex == 4 ? this.ACTIVE_CLASS : ""}
           >

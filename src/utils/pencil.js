@@ -65,6 +65,13 @@ class Pencil extends React.Component {
     this.setShapeType(brush)(color);
   }
 
+  drawEllipse(sx, sy, x, y, { lineWidth, color, brush } = this.props) {
+    this.ctx.lineWidth = lineWidth;
+    this.ctx.beginPath();
+    this.ctx.ellipse(sx, sy, x, y, 0, 0, 2 * Math.PI);
+    this.setShapeType(brush)(color);
+  }
+
   initDraw() {
     // 清空画布
     this.clearRect(0, 0);
