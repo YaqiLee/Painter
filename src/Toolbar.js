@@ -5,6 +5,7 @@ import { CHANGE_BRUSH, CHANGE_COLOR, CHANGE_WEIGHT } from "./redux/action";
 import "./toolbar.scss";
 import { brush } from "./utils/config";
 import CurveLine from "./components/CurveLine";
+import { config } from "rxjs";
 
 const Line = styled.div`
   ${(props) => {
@@ -84,10 +85,12 @@ class Toolbar extends React.Component {
 
   events = {
     clear: "clear",
+    select: "select",
   };
 
   eventsObj = {
     [this.events.clear]: this.props.clear,
+    [this.events.select]: this.props.select,
   };
 
   brushs = [
@@ -238,9 +241,16 @@ class Toolbar extends React.Component {
                 </a>
               </div>
               <div
-                data-event={this.events.clear}
-                onClick={this.onClick}
+                data-event={this.events.select}
+                data-brush={brush.select}
+                onClick={this.onSelectShape}
+                className={
+                  this.props.brush == brush.select ? this.ACTIVE_CLASS : ""
+                }
               >
+                选区
+              </div>
+              <div data-event={this.events.clear} onClick={this.onClick}>
                 清空画布
               </div>
             </div>

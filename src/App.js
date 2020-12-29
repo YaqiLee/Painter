@@ -18,6 +18,8 @@ class App extends React.Component {
   // 鼠标按键事件
   keydownSubject = new Subject();
   keyupSubject = new Subject();
+  // 选区
+  selectSubject = new Subject();
 
   commonProps = {
     clear: this.clearSubject,
@@ -25,6 +27,7 @@ class App extends React.Component {
     keydown: this.keydownSubject,
     download: this.downSubject,
     cancel: this.cancelSubject,
+    select: this.selectSubject,
   };
 
   componentDidMount() {

@@ -1,4 +1,5 @@
 export const brush = {
+  select: 'select', // 选区
   curve: 'curve',
   line: 'line',
   rect: 'rect', // 填充
@@ -8,5 +9,6 @@ export const brush = {
 }
 
 export const KEY = {
-  SHIFT: 16
+  SHIFT: 16,
+  DELETE: 46,
 }

@@ -27,7 +27,7 @@ class Pencil extends React.Component {
   }
 
   drawTable() {
-    this.ctxbg.moveTo(0, 0)
+    this.ctxbg.moveTo(0, 0);
     this.ctxbg.lineTo(500, 500);
     this.ctxbg.stroke();
   }
@@ -76,7 +76,7 @@ class Pencil extends React.Component {
     // 清空画布
     this.clearRect(0, 0);
     // 放入之前的数据
-    this.putImageData()
+    this.putImageData();
   }
 
   clearRect(x, y, width = this.canvasWidth, height = this.canvasHeight) {
@@ -88,7 +88,7 @@ class Pencil extends React.Component {
       return this.finishShape;
     }
     //
-    let shapes = [brush.oRect, brush.oCircle];
+    let shapes = [brush.oRect, brush.oCircle, brush.select];
     this.finishShape = shapes.includes(brushType)
       ? this.strokeShape
       : this.fillShape;
