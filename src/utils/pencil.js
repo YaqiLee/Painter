@@ -95,8 +95,8 @@ class Pencil extends React.Component {
     return this.finishShape;
   }
 
-  getImageData(width = this.canvasWidth, height = this.canvasHeight) {
-    this.imgdata = this.ctx.getImageData(0, 0, width, height);
+  getImageData(x = 0, y = 0, width = this.canvasWidth, height = this.canvasHeight) {
+    this.imgdata = this.ctx.getImageData(x, y, width, height);
     return this.imgdata;
   }
 

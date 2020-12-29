@@ -31,7 +31,8 @@ class Palette extends Pencil {
     this.ctx = null;
     // 用到的键
     this.useKeys = [KEY.SHIFT];
-
+    this.isMove = false;
+    this.moveData = []; // [移动之前的数据， 移动中的数据]
     this.points = {
       x: 0,
       y: 0,
@@ -70,6 +71,9 @@ class Palette extends Pencil {
   }
 
   onMouseDown = ({ pageX, pageY }) => {
+    // 鼠标当前开始点的位置
+    this.points.cx = pageX;
+    this.points.cy = pageY;
     // 计算是否在选取范围内
     if (
       this.props.brush === brush.select &&
@@ -78,6 +82,21 @@ class Palette extends Pencil {
     ) {
       this.hasSelect = false;
       this.props.cancel.next();
+      return;
+    }
+
+    if (
+      this.props.brush === brush.select &&
+      this.hasSelect &&
+      this.withinSelectScope(pageX, pageY)
+    ) {
+      this.isMove = true;
+      const { x, y, endX, endY } = this.points;
+      this.moveData[0] = this.imgdata;
+      // 到这里imgdata就变成了选区的数据了
+      this.selectRectData = this.getImageData(x, y, endX - x, endY - y);
+      // 清空原来选区位置的数据
+      this.onKeyDelete();
       return;
     }
 
@@ -93,14 +112,23 @@ class Palette extends Pencil {
   };
 
   onMouseUp = ({ pageX, pageY }) => {
-    // 记录结束点的位置
-    this.points.endX = pageX;
-    this.points.endY = pageY;
+    // 记录结束点的位置, 起始点总是小于结束点
+    if (pageX < this.points.x) {
+      this.points.endX = this.points.x;
+      this.points.endY = this.points.y;
+      this.points.x = pageX;
+      this.points.y = pageY;
+    } else {
+      this.points.endX = pageX;
+      this.points.endY = pageY;
+    }
+
     this.setState({ canDraw: false, prevDot: { x: null, y: null } });
     this.getImageData();
     // 清空完成函数
     this.finishShape = null;
     this.historys.push(this.imgdata);
+    this.isMove = false;
   };
 
   onMouseMove = ({ pageX, pageY }) => {
@@ -120,11 +148,19 @@ class Palette extends Pencil {
     e.stopPropagation();
   };
   // 鼠标移动事件操作函数
-  onDrawBefore(x, y) {
-    if (this.withinSelectScope(x, y)) {
+  onDrawBefore(px, py) {
+    const { x, y, cx, cy } = this.points;
+    if (this.isMove) {
       this.canvasObj.style.cursor = "move";
-    } else {
-      this.canvasObj.style.cursor = "inherit";
+      // TODO：移动结束之后需要清空
+      if (!this.moveData[1]) {
+        this.getImageData();
+        this.moveData[1] = this.imgdata;
+      }
+      this.putImageData(0, 0, this.moveData[1]);
+      // 放到当前鼠标移动位置
+      this.putImageData(x + px - cx, y + py - cy, this.selectRectData);
+      console.log(px - cx, py - cy);
     }
   }
 
@@ -255,15 +291,11 @@ class Palette extends Pencil {
     if (this.props.brush == brush.select) {
       const { x, y, endX, endY } = this.points;
       // 反向
-      if (endX < x) {
-        this.clearRect(endX - 1, endY - 1, x - endX + 2, y - endY + 2);
-      } else {
-        this.clearRect(x - 1, y - 1, endX - x + 2, endY - y + 2);
-      }
+      this.clearRect(x - 1, y - 1, endX - x + 2, endY - y + 2);
       // 不在选区
       this.hasSelect = false;
       this.getImageData();
-      this.historys.push(this.imgdata)
+      this.historys.push(this.imgdata);
     }
   }
 
