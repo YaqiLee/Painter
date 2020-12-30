@@ -281,8 +281,10 @@ class Palette extends Pencil {
       this.initCanvas();
     });
 
-    this.props.keyup.subscribe((e) => {
-      this.initBrushSetting(-1);
+    this.props.keyup.subscribe(({ keyCode }) => {
+      if(keyCode === KEY.SHIFT) {
+        this.initBrushSetting(-1);
+      }
     });
 
     this.props.keydown.subscribe(({ keyCode }) => {
