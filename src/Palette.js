@@ -2,13 +2,11 @@ import React from "react";
 import { connect } from "react-redux";
 import { race } from "rxjs";
 import {
-  combineAll,
-  debounceTime,
   filter,
   map,
-  merge,
-  switchMap,
-  tap,
+
+
+  tap
 } from "rxjs/operators";
 import CanvasBackground from "./CanvasBackground";
 import "./Palette.scss";
@@ -94,7 +92,7 @@ class Palette extends Pencil {
       const { x, y, endX, endY } = this.points;
       this.moveData[0] = this.imgdata;
       // 到这里imgdata就变成了选区的数据了
-      this.selectRectData = this.getImageData(x, y, endX - x, endY - y);
+      this.selectRectData = this.getImageData(x + 1, y + 1, endX - x - 2, endY - y - 2)
       // 清空原来选区位置的数据
       this.onKeyDelete();
       return;
@@ -128,7 +126,10 @@ class Palette extends Pencil {
     // 清空完成函数
     this.finishShape = null;
     this.historys.push(this.imgdata);
-    this.isMove = false;
+    if(this.isMove) {
+      this.isMove = false;
+      this.moveData[1] = null;
+    }
   };
 
   onMouseMove = ({ pageX, pageY }) => {
@@ -146,6 +147,7 @@ class Palette extends Pencil {
   onMouseLeave = (e) => {
     this.setState({ canDraw: false });
     e.stopPropagation();
+    
   };
   // 鼠标移动事件操作函数
   onDrawBefore(px, py) {
@@ -158,9 +160,13 @@ class Palette extends Pencil {
         this.moveData[1] = this.imgdata;
       }
       this.putImageData(0, 0, this.moveData[1]);
+      const { width, height } = this.selectRectData;
+      this.ctx.clearRect(x + px - cx, y + py - cy, width, height);
       // 放到当前鼠标移动位置
       this.putImageData(x + px - cx, y + py - cy, this.selectRectData);
-      console.log(px - cx, py - cy);
+    }
+    else {
+      this.canvasObj.style.cursor = "inherit";
     }
   }
 
@@ -208,6 +214,7 @@ class Palette extends Pencil {
     this.ctx.save();
     this.ctx.setLineDash([1, 3]);
     this.drawBrushRect(x, y, pageX, pageY, options);
+    this.ctx.clip();
     this.ctx.restore();
   }
 
