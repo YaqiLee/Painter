@@ -23,20 +23,22 @@ class Palette extends Pencil {
     this.ctx = null;
     // 用到的键
     this.useKeys = [KEY.SHIFT];
-    this.isMove = false;
+    this.isMove = false; // 是否移动状态
     this.moveData = []; // [移动之前的数据， 移动中的数据]
     this.keyCode = null; // 当前按住的快捷键, 不支持双组
     this.points = {
-      x: 0,
+      mx: 0, // 当前位置，随鼠标位置变化
+      my: 0,
+      cx: 0, // 当前点击位置
+      cy: 0,
+      x: 0, // 画图起始点
       y: 0,
-      endX: 0,
+      endX: 0, // 画图结束点
       endY: 0,
     };
 
     this.state = {
-      prevDot: { x: null, y: null },
       canDraw: false,
-      key: -1,
     };
 
     this.canvas$ = React.createRef();
@@ -282,7 +284,7 @@ class Palette extends Pencil {
     });
 
     this.props.keyup.subscribe(({ keyCode }) => {
-      if(keyCode === KEY.SHIFT) {
+      if (keyCode === KEY.SHIFT) {
         this.initBrushSetting(-1);
       }
     });
