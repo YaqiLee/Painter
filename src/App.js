@@ -39,12 +39,12 @@ class App extends React.Component {
     document.addEventListener("keyup", this.onKeyup);
   }
 
-  onKeyup = () => {
-    this.keyupSubject.next(-1);
+  onKeyup = (e) => {
+    this.keyupSubject.next(e);
   };
 
   onKeyDown = (e) => {
-    this.keydownSubject.next(e.keyCode);
+    this.keydownSubject.next(e);
   };
 
   render() {

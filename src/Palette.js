@@ -1,13 +1,7 @@
 import React from "react";
 import { connect } from "react-redux";
 import { race } from "rxjs";
-import {
-  filter,
-  map,
-
-
-  tap
-} from "rxjs/operators";
+import { filter, map, tap } from "rxjs/operators";
 import CanvasBackground from "./CanvasBackground";
 import "./Palette.scss";
 import { brush, KEY } from "./utils/config";
@@ -31,6 +25,7 @@ class Palette extends Pencil {
     this.useKeys = [KEY.SHIFT];
     this.isMove = false;
     this.moveData = []; // [移动之前的数据， 移动中的数据]
+    this.keyCode = null; // 当前按住的快捷键, 不支持双组
     this.points = {
       x: 0,
       y: 0,
@@ -72,6 +67,9 @@ class Palette extends Pencil {
     // 鼠标当前开始点的位置
     this.points.cx = pageX;
     this.points.cy = pageY;
+    // 移动中的位置
+    this.points.mx = pageX;
+    this.points.my = pageY;
     // 计算是否在选取范围内
     if (
       this.props.brush === brush.select &&
@@ -92,7 +90,12 @@ class Palette extends Pencil {
       const { x, y, endX, endY } = this.points;
       this.moveData[0] = this.imgdata;
       // 到这里imgdata就变成了选区的数据了
-      this.selectRectData = this.getImageData(x + 1, y + 1, endX - x - 2, endY - y - 2)
+      this.selectRectData = this.getImageData(
+        x + 1,
+        y + 1,
+        endX - x - 2,
+        endY - y - 2
+      );
       // 清空原来选区位置的数据
       this.onKeyDelete();
       return;
@@ -102,10 +105,9 @@ class Palette extends Pencil {
     // 记录开始点的位置
     this.points.x = pageX;
     this.points.y = pageY;
-    this.setState({ prevDot: { x: pageX, y: pageY } });
 
     this.getImageData();
-    this.initBrushSetting();
+    this.initBrushSetting(this.keyCode);
     this.historys.length <= 0 && this.historys.push(this.imgdata);
   };
 
@@ -121,12 +123,12 @@ class Palette extends Pencil {
       this.points.endY = pageY;
     }
 
-    this.setState({ canDraw: false, prevDot: { x: null, y: null } });
+    this.setState({ canDraw: false });
     this.getImageData();
     // 清空完成函数
     this.finishShape = null;
     this.historys.push(this.imgdata);
-    if(this.isMove) {
+    if (this.isMove) {
       this.isMove = false;
       this.moveData[1] = null;
     }
@@ -139,15 +141,15 @@ class Palette extends Pencil {
       return false;
     }
 
-    let { x, y } = this.state.prevDot;
+    this.draw(pageX, pageY, this.points);
 
-    this.draw(x, y, pageX, pageY);
+    this.points.mx = pageX;
+    this.points.my = pageY;
   };
 
   onMouseLeave = (e) => {
     this.setState({ canDraw: false });
     e.stopPropagation();
-    
   };
   // 鼠标移动事件操作函数
   onDrawBefore(px, py) {
@@ -164,20 +166,21 @@ class Palette extends Pencil {
       this.ctx.clearRect(x + px - cx, y + py - cy, width, height);
       // 放到当前鼠标移动位置
       this.putImageData(x + px - cx, y + py - cy, this.selectRectData);
-    }
-    else {
+    } else {
       this.canvasObj.style.cursor = "inherit";
     }
   }
 
   // 画笔设置，不在执行中判断，提高画笔效率
-  initBrushSetting(key = -1) {
+  initBrushSetting(key) {
     // 当前画笔类型
     let brusht = this.props.brush;
     // 矩形
     let rects = [brush.oRect, brush.rect];
     // 圆形
     let circles = [brush.circle, brush.oCircle];
+
+    this.keyCode = key;
 
     if (brush.select == brusht) {
       this.hasSelect = true;
@@ -198,6 +201,7 @@ class Palette extends Pencil {
     if (rects.includes(brusht)) {
       // TODO: 这里少一个方形
       this.draw = key === KEY.SHIFT ? this.drawBrushSquare : this.drawBrushRect;
+      console.log(this.draw);
       return;
     }
 
@@ -208,33 +212,30 @@ class Palette extends Pencil {
     }
   }
 
-  drawSelectScope(x, y, pageX, pageY) {
+  drawSelectScope(pageX, pageY, { x, y }) {
     const options = { brush: this.props.brush, lineWidth: 1, color: "#000" };
     // 设置虚线[实线长度，虚线长度]
     this.ctx.save();
     this.ctx.setLineDash([1, 3]);
-    this.drawBrushRect(x, y, pageX, pageY, options);
-    this.ctx.clip();
+    this.drawBrushRect(pageX, pageY, this.points, options);
     this.ctx.restore();
   }
 
-  drawBrushLine(x, y, pageX, pageY) {
+  drawBrushLine(pageX, pageY, { x, y }) {
     this.initDraw();
     this.drawLine(x, y, pageX, pageY);
   }
   // 曲线
-  drawBrushCurve(x, y, pageX, pageY) {
-    this.drawLine(x, y, pageX, pageY);
-    // 线段连续
-    this.setState({ prevDot: { x: pageX, y: pageY } });
+  drawBrushCurve(pageX, pageY, { mx, my }) {
+    this.drawLine(mx, my, pageX, pageY);
   }
   // 圆形
-  drawBrushCircle(x, y, pageX, pageY) {
+  drawBrushCircle(pageX, pageY, { x, y }) {
     this.initDraw();
     this.drawCircle(x, y, Math.abs(pageX - x));
   }
   // 矩形
-  drawBrushRect(x, y, pageX, pageY, props) {
+  drawBrushRect(pageX, pageY, { x, y }, props) {
     const width = pageX - x;
     const height = pageY - y;
 
@@ -242,11 +243,11 @@ class Palette extends Pencil {
     this.drawRect(x, y, width, isNaN(pageY) ? width : height, props);
   }
   // 正方形
-  drawBrushSquare(x, y, pageX, pageY) {
-    this.drawBrushRect(x, y, Math.max(pageX, pageY));
+  drawBrushSquare(pageX, pageY, { x, y }) {
+    this.drawBrushRect(Math.max(pageX, pageY), "null", { x, y });
   }
   // 椭圆
-  drawBrushEllipse(x, y, pageX, pageY) {
+  drawBrushEllipse(pageX, pageY, { x, y }) {
     this.initDraw();
     this.drawEllipse(x, y, Math.abs(pageX - x), Math.abs(pageY - y));
   }
@@ -279,16 +280,19 @@ class Palette extends Pencil {
       // 清空画布
       this.initCanvas();
     });
-    // 按键按下和抬起执行相同的动作，race 一个成功即可
-    race(this.props.keyup, this.props.keydown)
-      .pipe(filter((d) => this.useKeys.includes(d)))
-      .subscribe((key) => this.initBrushSetting(key));
 
-    this.props.keyup.subscribe((key) => {});
+    this.props.keyup.subscribe((e) => {
+      this.initBrushSetting(-1);
+    });
 
-    this.props.keydown.subscribe((key) => {
-      if (key === KEY.DELETE) {
+    this.props.keydown.subscribe(({ keyCode }) => {
+      if (keyCode === KEY.DELETE) {
         this.onKeyDelete();
+        return;
+      }
+      if (keyCode === KEY.SHIFT) {
+        this.initBrushSetting(keyCode);
+        return;
       }
     });
   }
