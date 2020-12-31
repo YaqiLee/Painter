@@ -1,11 +1,10 @@
 import React from "react";
 import { connect } from "react-redux";
 import styled from "styled-components";
+import CurveLine from "./components/CurveLine";
 import { CHANGE_BRUSH, CHANGE_COLOR, CHANGE_WEIGHT } from "./redux/action";
 import "./toolbar.scss";
 import { brush } from "./utils/config";
-import CurveLine from "./components/CurveLine";
-import { config } from "rxjs";
 
 const Line = styled.div`
   ${(props) => {

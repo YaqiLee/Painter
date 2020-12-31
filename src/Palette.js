@@ -1,6 +1,5 @@
 import React from "react";
 import { connect } from "react-redux";
-import { race } from "rxjs";
 import { filter, map, tap } from "rxjs/operators";
 import CanvasBackground from "./CanvasBackground";
 import "./Palette.scss";

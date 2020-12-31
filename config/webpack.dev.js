@@ -8,7 +8,6 @@ module.exports = merge(common, {
   cache: false,
 
   devServer: {
-    port: 4600,
-    hot: true,
+    port: 4600
   },
 });
