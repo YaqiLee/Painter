@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES5",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "allowJs": true,
+    "strict": true,
+    "outDir": "./docs",
+    "jsx": "react",
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true
+  },
+  "include": ["src"],
+  "exclude": [
+    "node_modules"
+  ]
+}

@@ -1,8 +1,0 @@
-*{padding:0;margin:0;box-sizing:border-box;list-style:none;outline:none;-webkit-user-select:none;user-select:none}html,body,main{height:100vh;width:100vw;overflow:hidden}
-
-canvas{position:absolute;top:0;left:0;cursor:crosshair}
-
-.toolbar ul li .item:hover,.toolbar ul li.active .item,.toolbar ul li .item-categories>div:hover,.toolbar ul li .item-categories>div.active{box-shadow:inset 100px 0 10px #ed52b6}.toolbar{position:absolute;left:0;top:15vh;color:white}.toolbar ul{display:flex;flex-direction:column}.toolbar ul li{position:relative;display:flex;align-items:center;justify-content:flex-start;cursor:pointer}.toolbar ul li .item{width:100px;max-width:100px;overflow:hidden;text-align:center;line-height:42px;color:white;letter-spacing:0.2em;background-color:#70a1ff;border-bottom:1px solid white;z-index:2;transition:.3s}.toolbar ul li .item-categories{transition:all 0.3s linear;transform:translateX(-300px);position:absolute;left:100px;top:0;width:100px;margin-left:5px;display:flex;flex-direction:column;background-color:#70a1ff;z-index:1}.toolbar ul li .item-categories>div{display:flex;justify-content:center;align-items:center;height:42px;border-bottom:1px solid white;margin-bottom:-1px;cursor:pointer;transition:.3s}.toolbar ul li.active .item-categories{transform:translateX(0)}
-
-
-/*# sourceMappingURL=main.css.map*/

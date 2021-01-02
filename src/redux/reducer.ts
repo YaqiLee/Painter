@@ -1,4 +1,4 @@
-import { brush } from "../utils/config";
+import { brush } from "../common/config";
 import {
   CHANGE_WEIGHT,
   CHANGE_COLOR,
@@ -16,7 +16,7 @@ const initialState = {
   },
 };
 
-export default function reducer(state = initialState, action) {
+export default function reducer(state = initialState, action: any) {
   switch (action.type) {
     case CHANGE_WEIGHT:
       return Object.assign({}, state, { lineWidth: action.payload });
