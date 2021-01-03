@@ -1,33 +1,20 @@
-import { brush } from "../common/config";
-import {
-  CHANGE_WEIGHT,
-  CHANGE_COLOR,
-  CHANGE_CANVAS_RECT,
-  CHANGE_BRUSH,
-} from "./action";
+import { brush, BrushShape } from "../common/config";
+import { UPDATE_CLIENT } from "./action";
+
+type Action = { type: string; payload: any };
 
 const initialState = {
-  lineWidth: 2,
-  color: "#000000",
-  brush: brush.curve,
-  canvas: {
-    width: 0,
-    height: 0,
-  },
+  width: 500,
+  height: 500,
 };
 
-export default function reducer(state = initialState, action: any) {
-  switch (action.type) {
-    case CHANGE_WEIGHT:
-      return Object.assign({}, state, { lineWidth: action.payload });
-    case CHANGE_COLOR:
-      return Object.assign({}, state, { color: action.payload });
-    case CHANGE_CANVAS_RECT:
-      const canvas = Object.assign(state.canvas, action.payload);
-      return Object.assign({}, state, canvas);
-    case CHANGE_BRUSH:
-      return Object.assign({}, state, { brush: action.payload });
+function reducer(state = initialState, { type, payload }: Action) {
+  switch (type) {
+    case UPDATE_CLIENT:
+      return Object.assign({}, state, { ...payload });
     default:
       return state;
   }
 }
+
+export default reducer;

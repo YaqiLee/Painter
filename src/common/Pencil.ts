@@ -1,15 +1,33 @@
-import { CanvasContext, Circle, Rect } from "./config";
+import { BrushShape } from "./config";
+import { Circle, Ellipse, Line, Rect } from "./model";
 
 class Pencil {
-  options: any;
+
+  private defaults: any = {
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+    fill: false,
+    r: 0,
+    color: "#f00",
+    brush: BrushShape.curve
+  };
+
+  options: any = { };
+
   ctx!: CanvasRenderingContext2D;
 
   constructor(ctx: CanvasRenderingContext2D, options?: any) {
     this.ctx = ctx;
-    this.options = options;
+    this.options = Object.assign(this.defaults, options);
   }
 
-  drawCircle({ x, y, r, fill, color }: Circle) {
+  setOptions(options: any = {}) {
+    return Object.assign(this.options, options);
+  }
+
+  drawCircle({ x = 0, y = 0, r = 1, fill, color }: Circle = this.defaults) {
     this.ctx.beginPath();
     this.ctx.arc(x, y, r, 0, 2 * Math.PI, true);
     this.renderShape(color, fill);
@@ -19,6 +37,42 @@ class Pencil {
     this.ctx.beginPath();
     this.ctx.rect(x, y, width, height);
     this.renderShape(color, fill);
+  }
+
+  drawLine({ x, y, xEnd, yEnd, color, lineWidth = 1 }: Line) {
+    this.ctx.beginPath();
+    this.ctx.lineWidth = lineWidth;
+    this.ctx.moveTo(x, y);
+    this.ctx.lineTo(xEnd, yEnd);
+    this.renderShape(color, false);
+  }
+  /**
+   * 画椭圆
+   * @param param0
+   */
+  drawEllipse({ x, y, xEnd, yEnd, color, fill, lineWidth = 1 }: Ellipse) {
+    this.ctx.lineWidth = lineWidth;
+    this.ctx.beginPath();
+    this.ctx.ellipse(x, y, xEnd, yEnd, 0, 0, 2 * Math.PI);
+    this.renderShape(color, fill);
+  }
+
+  getDrawFunc({ brush } = this.options) {
+    switch (brush) {
+      case BrushShape.rect:
+        return this.drawRect.bind(this);
+      case BrushShape.circle:
+        return this.drawCircle.bind(this);
+      case BrushShape.curve:
+      case BrushShape.line:
+        return this.drawLine.bind(this);
+      default:
+        return this.drawLine.bind(this);
+    }
+  }
+
+  clear(x: number, y: number, w: number, h: number) {
+    this.ctx.clearRect(x, y, w, h);
   }
 
   renderShape(color = "#000", fill = false) {
