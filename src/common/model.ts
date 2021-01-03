@@ -41,3 +41,14 @@ export interface Ellipse extends BaseShape {
 }
 
 export type CanvasContext = CanvasRenderingContext2D | null;
+
+export interface Points {
+  sx: number; // 鼠标按下的位置
+  sy: number;
+  mx: number; // 移动中的位置
+  my: number;
+  ex: number; // 鼠标抬起的位置
+  ey: number;
+  px: number; // 鼠标上一个位置
+  py: number;
+};

@@ -2,7 +2,6 @@ import { BrushShape } from "./config";
 import { Circle, Ellipse, Line, Rect } from "./model";
 
 class Pencil {
-
   private defaults: any = {
     x: 0,
     y: 0,
@@ -11,10 +10,10 @@ class Pencil {
     fill: false,
     r: 0,
     color: "#f00",
-    brush: BrushShape.curve
+    brush: BrushShape.circle,
   };
 
-  options: any = { };
+  options: any = {};
 
   ctx!: CanvasRenderingContext2D;
 
@@ -30,13 +29,13 @@ class Pencil {
   drawCircle({ x = 0, y = 0, r = 1, fill, color }: Circle = this.defaults) {
     this.ctx.beginPath();
     this.ctx.arc(x, y, r, 0, 2 * Math.PI, true);
-    this.renderShape(color, fill);
+    this.renderShape();
   }
 
   drawRect({ x, y, width, height, fill, color }: Rect) {
     this.ctx.beginPath();
     this.ctx.rect(x, y, width, height);
-    this.renderShape(color, fill);
+    this.renderShape();
   }
 
   drawLine({ x, y, xEnd, yEnd, color, lineWidth = 1 }: Line) {
@@ -44,7 +43,9 @@ class Pencil {
     this.ctx.lineWidth = lineWidth;
     this.ctx.moveTo(x, y);
     this.ctx.lineTo(xEnd, yEnd);
-    this.renderShape(color, false);
+    this.ctx.strokeStyle = color ?? "#f00";
+    this.ctx.stroke();
+    this.ctx.closePath();
   }
   /**
    * 画椭圆
@@ -54,28 +55,28 @@ class Pencil {
     this.ctx.lineWidth = lineWidth;
     this.ctx.beginPath();
     this.ctx.ellipse(x, y, xEnd, yEnd, 0, 0, 2 * Math.PI);
-    this.renderShape(color, fill);
+    this.renderShape();
   }
 
-  getDrawFunc({ brush } = this.options) {
-    switch (brush) {
-      case BrushShape.rect:
-        return this.drawRect.bind(this);
-      case BrushShape.circle:
-        return this.drawCircle.bind(this);
-      case BrushShape.curve:
-      case BrushShape.line:
-        return this.drawLine.bind(this);
-      default:
-        return this.drawLine.bind(this);
-    }
-  }
+  // getDrawFunc({ brush } = this.options) {
+  //   switch (brush) {
+  //     case BrushShape.rect:
+  //       return this.drawRect.bind(this);
+  //     case BrushShape.circle:
+  //       return this.drawCircle.bind(this);
+  //     case BrushShape.curve:
+  //     case BrushShape.line:
+  //       return this.drawLine.bind(this);
+  //     default:
+  //       return this.drawLine.bind(this);
+  //   }
+  // }
 
   clear(x: number, y: number, w: number, h: number) {
     this.ctx.clearRect(x, y, w, h);
   }
 
-  renderShape(color = "#000", fill = false) {
+  renderShape({ color = "#000", fill = false } = this.options) {
     if (fill) {
       this.ctx.fillStyle = color;
       this.ctx.fill();
