@@ -21,6 +21,7 @@ class WhiteBoard extends React.Component<propTypes> {
     px: 0, // 鼠标上一个位置
     py: 0,
   };
+  hasSelect: boolean = false;
   // 是否开始画
   canDraw: boolean = false;
   ctx!: CanvasRenderingContext2D;
@@ -38,12 +39,35 @@ class WhiteBoard extends React.Component<propTypes> {
   get canvas(): HTMLCanvasElement {
     return this.canvasRef.current as HTMLCanvasElement;
   }
+  // 撤销
+  onCancel = () => {
+    let history = this.historys.pop();
+    const imageData = this.canvasData[1];
+
+    while (history && history == imageData) {
+      history = this.historys.pop();
+    }
+
+    if (history) {
+      this.ctx.putImageData(history, 0, 0);
+    }
+  };
+
+  onCancelSelect = (x: number, y: number) => {
+    if (this.hasSelect && !this.withinSelectScope(x, y)) {
+      this.onCancel();
+      this.hasSelect = false;
+      
+    }
+  };
+
+  onDownload = ({ currentTarget }: any) => {
+    const url = this.canvas.toDataURL();
+    currentTarget.setAttribute("href", url);
+  };
 
   onBrushChange = (brushProps: any = {}) => {
     // 笔刷更新
-    // if (typeof brushProps.brush == "string" && brushProps.brush) {
-    //   this.drawFunc = this.pencil.getDrawFunc(brushProps);
-    // }
     this.pencil.setOptions(brushProps);
   };
 
@@ -65,11 +89,12 @@ class WhiteBoard extends React.Component<propTypes> {
       this.points.ex = pageX;
       this.points.ey = pageY;
     }
-
-    this.historys.push(this.getCanvasData())
+    this.canvasData[1] = this.getCanvasData();
+    this.historys.push(this.canvasData[1]);
   };
 
   onMouseDown = ({ pageX, pageY }: MouseEvent<any>) => {
+    this.initBrushSetting(pageX, pageY);
 
     this.points.sx = pageX;
     this.points.sy = pageY;
@@ -77,8 +102,8 @@ class WhiteBoard extends React.Component<propTypes> {
     this.points.py = pageY;
 
     this.canDraw = true;
-    this.initBrushSetting();
     this.canvasData[0] = this.getCanvasData();
+    this.historys.length <= 0 && this.historys.push(this.canvasData[0]);
   };
 
   onMouseMove = ({ pageX, pageY }: MouseEvent<any>) => {
@@ -93,11 +118,21 @@ class WhiteBoard extends React.Component<propTypes> {
     this.points.py = this.points.my;
   };
 
-  initBrushSetting() {
+  onMouseLeave = () => {
+    this.canDraw = false;
+  }
+
+  initBrushSetting(pageX: number, pageY: number) {
     const { brush } = this.pencil.options;
+
+    this.onCancelSelect(pageX, pageY);
 
     if (brush == BrushShape.curve) {
       this.draw = this.drawCurve;
+      return;
+    }
+    if (brush == BrushShape.select) {
+      this.draw = this.drawSelect;
       return;
     }
 
@@ -141,6 +176,13 @@ class WhiteBoard extends React.Component<propTypes> {
     this.pencil.drawLine({ x, y, xEnd, yEnd });
   }
 
+  drawSelect(pageX: number, pageY: number, { sx, sy }: Points) {
+    this.ctx.setLineDash([2, 3]);
+    this.hasSelect = true;
+    this.drawRect(pageX, pageY, { sx, sy });
+    this.ctx.setLineDash([])
+  }
+
   drawRect(pageX: number, pageY: number, { sx, sy }: any) {
     const [x, y] = [sx, sy];
     const width = pageX - x;
@@ -153,18 +195,29 @@ class WhiteBoard extends React.Component<propTypes> {
     this.pencil.clear(0, 0, this.props.width, this.props.height);
     this.ctx.putImageData(this.canvasData[0], 0, 0);
   }
+  // 是否在选区范围内
+  withinSelectScope = (x: number, y: number) => {
+    const { sx, sy, ex, ey } = this.points;
+
+    return x >= sx && x <= ex && y >= sy && y <= ey;
+  };
 
   render() {
     return (
       <>
         {/* <WhiteBoardBack/> */}
-        <Toolbar brushChange={this.onBrushChange} />
+        <Toolbar
+          brushChange={this.onBrushChange}
+          onCancel={this.onCancel}
+          download={this.onDownload}
+        />
         <canvas
           ref={this.canvasRef}
           {...this.props}
           onMouseDown={this.onMouseDown}
           onMouseUp={this.onMouseUp}
           onMouseMove={this.onMouseMove}
+          onMouseLeave={this.onMouseLeave}
         >
           您的浏览器版本不支持
         </canvas>

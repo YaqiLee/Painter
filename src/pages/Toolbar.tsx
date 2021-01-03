@@ -1,4 +1,4 @@
-import React from "react";
+import React, { MouseEvent } from "react";
 import { BrushShape } from "../common/config";
 import CurveLine from "../components/CurveLine";
 import Line from "../components/Line";
@@ -6,6 +6,8 @@ import { Circle, Rect } from "../components/Shape";
 import "./Toolbar.scss";
 
 type propTypes = {
+  download: (e: any) => void;
+  onCancel: () => void;
   brushChange: (props: any) => void;
 };
 
@@ -76,6 +78,10 @@ class Toolbar extends React.Component<propTypes> {
     this.props.brushChange({ brush: brush, fill });
   };
 
+  onClickSelect = () => {
+    this.props.brushChange({ brush: BrushShape.select });
+  };
+
   onClickParent = ({ currentTarget }: any) => {
     const i = currentTarget.getAttribute("data-index");
     const current = this.state.select;
@@ -88,7 +94,7 @@ class Toolbar extends React.Component<propTypes> {
     const weight = currentTarget.getAttribute("data-weight");
     const current = this.state.selectChild;
 
-    this.props.brushChange({ lineWidth: weight })
+    this.props.brushChange({ lineWidth: weight });
     this.setState({ selectChild: current === i ? "" : i, weight });
   };
 
@@ -151,6 +157,24 @@ class Toolbar extends React.Component<propTypes> {
                   </div>
                 );
               })}
+            </div>
+          </li>
+          <li className={this.state.select == 4 ? this.ActiveClass : ""}>
+            <div data-index="4" className="item" onClick={this.onClickParent}>
+              工具
+            </div>
+            <div className="item-categories">
+              <div>
+                <a download onClick={this.props.download}>
+                  下载
+                </a>
+              </div>
+              <div onClick={this.onClickSelect}>选区</div>
+            </div>
+          </li>
+          <li className={this.state.select == 3 ? this.ActiveClass : ""}>
+            <div data-index="3" className="item" onClick={this.props.onCancel}>
+              撤销
             </div>
           </li>
         </ul>
