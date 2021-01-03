@@ -9,6 +9,7 @@ class Pencil {
     height: 0,
     fill: false,
     r: 0,
+    lineWidth: 1,
     color: "#f00",
     brush: BrushShape.rect,
   };
@@ -76,7 +77,8 @@ class Pencil {
     this.ctx.clearRect(x, y, w, h);
   }
 
-  renderShape({ color = "#000", fill = false } = this.options) {
+  renderShape({ color = "#000", fill = false, lineWidth } = this.options) {
+    this.ctx.lineWidth = lineWidth;
     if (fill) {
       this.ctx.fillStyle = color;
       this.ctx.fill();

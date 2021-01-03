@@ -97,6 +97,11 @@ class WhiteBoard extends React.Component<propTypes> {
     const { brush } = this.pencil.options;
 
     if (brush == BrushShape.curve) {
+      this.draw = this.drawCurve;
+      return;
+    }
+
+    if (brush == BrushShape.line) {
       this.draw = this.drawLine;
       return;
     }
@@ -125,8 +130,14 @@ class WhiteBoard extends React.Component<propTypes> {
     this.pencil.drawCircle({ x, y, r });
   }
 
-  drawLine(xEnd: number, yEnd: number, { px, py }: any) {
+  drawCurve(xEnd: number, yEnd: number, { px, py }: any) {
     const [x, y] = [px, py];
+    this.pencil.drawLine({ x, y, xEnd, yEnd });
+  }
+
+  drawLine(xEnd: number, yEnd: number, { sx, sy }: any) {
+    const [x, y] = [sx, sy];
+    this.restoreCanvas();
     this.pencil.drawLine({ x, y, xEnd, yEnd });
   }
 

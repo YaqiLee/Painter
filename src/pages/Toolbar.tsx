@@ -69,7 +69,7 @@ class Toolbar extends React.Component<propTypes> {
     const current = this.state.selectChild;
 
     if (current === key) {
-      brush = "";
+      brush = null;
       key = -1;
     }
     this.setState({ selectChild: key, brush });
@@ -83,11 +83,12 @@ class Toolbar extends React.Component<propTypes> {
     this.setState({ select: current === i ? -1 : i });
   };
 
-  onClickChild = ({ currentTarget }: any) => {
+  onClickWeight = ({ currentTarget }: any) => {
     const i = currentTarget.getAttribute("data-index");
     const weight = currentTarget.getAttribute("data-weight");
     const current = this.state.selectChild;
 
+    this.props.brushChange({ lineWidth: weight })
     this.setState({ selectChild: current === i ? "" : i, weight });
   };
 
@@ -113,7 +114,7 @@ class Toolbar extends React.Component<propTypes> {
                     key={i}
                     data-index={`c_${i}`}
                     data-weight={w}
-                    onClick={this.onClickChild}
+                    onClick={this.onClickWeight}
                     className={
                       this.state.selectChild == `c_${i}` ? this.ActiveClass : ""
                     }
