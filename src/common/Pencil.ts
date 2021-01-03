@@ -10,7 +10,7 @@ class Pencil {
     fill: false,
     r: 0,
     color: "#f00",
-    brush: BrushShape.circle,
+    brush: BrushShape.rect,
   };
 
   options: any = {};
