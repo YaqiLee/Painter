@@ -1,5 +1,5 @@
-import React, { ChangeEvent, MouseEvent, SyntheticEvent } from "react";
-import { brush, BrushShape } from "../common/config";
+import React from "react";
+import { BrushShape } from "../common/config";
 import CurveLine from "../components/CurveLine";
 import Line from "../components/Line";
 import { Circle, Rect } from "../components/Shape";
