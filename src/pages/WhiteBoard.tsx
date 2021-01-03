@@ -28,6 +28,7 @@ class WhiteBoard extends React.Component<propTypes> {
   draw = (px: number, py: number, {}: any) => {};
   canvasRef: React.RefObject<HTMLCanvasElement>;
   canvasData: any = [];
+  historys: ImageData[] = []; // 保存历史数据
 
   constructor(props: any) {
     super(props);
@@ -64,13 +65,17 @@ class WhiteBoard extends React.Component<propTypes> {
       this.points.ex = pageX;
       this.points.ey = pageY;
     }
+
+    this.historys.push(this.getCanvasData())
   };
 
   onMouseDown = ({ pageX, pageY }: MouseEvent<any>) => {
+
     this.points.sx = pageX;
     this.points.sy = pageY;
     this.points.px = pageX;
     this.points.py = pageY;
+
     this.canDraw = true;
     this.initBrushSetting();
     this.canvasData[0] = this.getCanvasData();
@@ -90,18 +95,23 @@ class WhiteBoard extends React.Component<propTypes> {
 
   initBrushSetting() {
     const { brush } = this.pencil.options;
+
     if (brush == BrushShape.curve) {
       this.draw = this.drawLine;
       return;
     }
 
-    if (brush === BrushShape.rect) {
+    if (brush == BrushShape.rect) {
       this.draw = this.drawRect;
+      return;
     }
 
-    if (brush === BrushShape.circle) {
+    if (brush == BrushShape.circle) {
       this.draw = this.drawCircle;
+      return;
     }
+
+    this.draw = this.drawLine;
   }
 
   getCanvasData(x = 0, y = 0, { width, height } = this.props) {
@@ -110,9 +120,8 @@ class WhiteBoard extends React.Component<propTypes> {
 
   drawCircle(pageX: number, pageY: number, { sx, sy }: Points) {
     const [x, y] = [sx, sy];
-    const r = pageX - x;
-    this.pencil.clear(0, 0, this.props.width, this.props.height);
-    this.ctx.putImageData(this.canvasData[0], 0, 0);
+    const r = Math.abs(pageX - x);
+    this.restoreCanvas();
     this.pencil.drawCircle({ x, y, r });
   }
 
@@ -125,9 +134,13 @@ class WhiteBoard extends React.Component<propTypes> {
     const [x, y] = [sx, sy];
     const width = pageX - x;
     const height = pageY - y;
+    this.restoreCanvas();
+    this.pencil.drawRect({ x, y, width, height });
+  }
+  // 清空画布，填上之前的数据
+  restoreCanvas() {
     this.pencil.clear(0, 0, this.props.width, this.props.height);
     this.ctx.putImageData(this.canvasData[0], 0, 0);
-    this.pencil.drawRect({ x, y, width, height });
   }
 
   render() {
