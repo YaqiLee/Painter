@@ -10,6 +10,11 @@ interface propTypes {
   height: number;
 }
 
+type History = {
+  name?: string;
+  history: ImageData;
+};
+
 class WhiteBoard extends React.Component<propTypes> {
   points: Points = {
     sx: 0, // 鼠标按下的位置
@@ -30,7 +35,7 @@ class WhiteBoard extends React.Component<propTypes> {
   draw = (px: number, py: number, {}: any) => {};
   canvasRef: React.RefObject<HTMLCanvasElement>;
   canvasData: any = [];
-  historys: ImageData[] = []; // 保存历史数据
+  historys: History[] = []; // 保存历史数据
 
   constructor(props: any) {
     super(props);
@@ -40,13 +45,19 @@ class WhiteBoard extends React.Component<propTypes> {
   get canvas(): HTMLCanvasElement {
     return this.canvasRef.current as HTMLCanvasElement;
   }
+  // 上一次历史记录
+  get prevHistory() {
+    const h = this.historys.pop() as History;
+
+    return h ?? { history: null };
+  }
   // 撤销
   onCancel = () => {
-    let history = this.historys.pop();
+    let { history } = this.prevHistory;
     const imageData = this.canvasData[1];
 
     while (history && history == imageData) {
-      history = this.historys.pop();
+      history = this.prevHistory.history;
     }
 
     if (history) {
@@ -54,13 +65,14 @@ class WhiteBoard extends React.Component<propTypes> {
     }
     return history;
   };
-  
+
   onCancelSelect = (x: number, y: number) => {
     if (this.hasSelect && !this.withinSelectScope(x, y)) {
       this.hasSelect = false;
       const history = this.onCancel();
-      history && this.historys.push(history);
-
+      history && this.historys.push({ name: "保存撤销后的记录", history });
+      console.log("cancel");
+      
       return true;
     }
     return false;
@@ -84,8 +96,9 @@ class WhiteBoard extends React.Component<propTypes> {
   onMouseUp = ({ pageX, pageY }: MouseEvent<any>) => {
     this.canDraw = false;
     // 移动完毕
-    if(this.moving) {
-      this.historys.push(this.getCanvasData());
+    if (this.moving) {
+      const history = this.getCanvasData();
+      this.historys.push({ name: "结束绘画", history });
       this.moving = false;
     }
 
@@ -114,36 +127,35 @@ class WhiteBoard extends React.Component<propTypes> {
       const width = ex - sx;
       const height = ey - sy;
       // 损失了1像素，宽度-2因为起始点加1
-      this.canvasData[2] = this.ctx.getImageData(sx + 1, sy + 1, width -2, height - 2)
+      const data = this.ctx.getImageData(sx + 1, sy + 1, width - 2, height - 2);
+      this.canvasData[2] = data;
       this.moving = true;
       this.ctx.clearRect(sx - 1, sy - 1, width + 2, height + 2);
       this.canvasData[1] = this.getCanvasData();
       return;
     }
+    this.onCancelSelect(pageX, pageY);
 
     this.points.sx = pageX;
     this.points.sy = pageY;
 
-    this.onCancelSelect(pageX, pageY);
     this.initBrushSetting(pageX, pageY);
 
     this.canvasData[0] = this.getCanvasData();
-    this.historys.length <= 0 && this.historys.push(this.canvasData[0]);
+    // 历史记录不存在时
+    if (this.historys.length <= 0) {
+      this.historys.push({ name: "第一次保存", history: this.canvasData[0] });
+    }
   };
 
   onMouseMove = ({ pageX, pageY }: MouseEvent<any>) => {
     const { sx, sy, ex, ey, px, py } = this.points;
-    // 修改鼠标指针样式
+    // 移动中
     if (this.moving) {
-      // this.restoreCanvas();
-
+      const dx = pageX - px + sx;
+      const dy = pageY - py + sy;
       this.ctx.putImageData(this.canvasData[1], 0, 0);
-      // this.ctx.clearRect(sx - 1, sy - 1, ex - sx, ey - sy);
-      this.ctx.putImageData(
-        this.canvasData[2],
-        pageX - px + sx,
-        pageY - py + sy
-      );
+      this.ctx.putImageData(this.canvasData[2], dx, dy);
       return;
     }
     if (this.canDraw === false) return;
@@ -201,7 +213,7 @@ class WhiteBoard extends React.Component<propTypes> {
       return;
     }
     this.canvasData[1] = this.getCanvasData();
-    this.historys.push(this.canvasData[1]);
+    this.historys.push({ history: this.canvasData[1] });
   }
 
   getCanvasData(x = 0, y = 0, { width, height } = this.props) {
@@ -254,8 +266,6 @@ class WhiteBoard extends React.Component<propTypes> {
       return false;
     }
     const { sx, sy, ex, ey } = this.points;
-
-    console.log(sx, sy, ex, ey, x, y);
 
     return x >= sx && x <= ex && y >= sy && y <= ey;
   };
