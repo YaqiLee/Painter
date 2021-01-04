@@ -50,15 +50,17 @@ class WhiteBoard extends React.Component<propTypes> {
 
     if (history) {
       this.ctx.putImageData(history, 0, 0);
+      this.historys.push(history);
     }
   };
 
   onCancelSelect = (x: number, y: number) => {
     if (this.hasSelect && !this.withinSelectScope(x, y)) {
-      this.onCancel();
       this.hasSelect = false;
-      
+      this.onCancel();
+      return true;
     }
+    return false;
   };
 
   onDownload = ({ currentTarget }: any) => {
@@ -89,11 +91,12 @@ class WhiteBoard extends React.Component<propTypes> {
       this.points.ex = pageX;
       this.points.ey = pageY;
     }
-    this.canvasData[1] = this.getCanvasData();
-    this.historys.push(this.canvasData[1]);
+    this.saveHistory();
   };
 
   onMouseDown = ({ pageX, pageY }: MouseEvent<any>) => {
+    this.onCancelSelect(pageX, pageY);
+
     this.initBrushSetting(pageX, pageY);
 
     this.points.sx = pageX;
@@ -107,6 +110,7 @@ class WhiteBoard extends React.Component<propTypes> {
   };
 
   onMouseMove = ({ pageX, pageY }: MouseEvent<any>) => {
+    this.canvas.style.cursor = "auto";
     if (this.canDraw === false) return;
     // 记录当前移动点的位置
     this.points.mx = pageX;
@@ -120,12 +124,12 @@ class WhiteBoard extends React.Component<propTypes> {
 
   onMouseLeave = () => {
     this.canDraw = false;
-  }
+  };
+
+  onMoveSelect = () => {};
 
   initBrushSetting(pageX: number, pageY: number) {
     const { brush } = this.pencil.options;
-
-    this.onCancelSelect(pageX, pageY);
 
     if (brush == BrushShape.curve) {
       this.draw = this.drawCurve;
@@ -154,6 +158,20 @@ class WhiteBoard extends React.Component<propTypes> {
     this.draw = this.drawLine;
   }
 
+  saveHistory() {
+    const { sx, sy, ex, ey } = this.points;
+    // 没有移动不保存历史
+    if(ex === sx  && ey === sy) {
+      return ;
+    }
+    console.log("save history");
+    
+    this.canvasData[1] = this.getCanvasData();
+    this.historys.push(this.canvasData[1]);
+    console.log(this.historys.length);
+    
+  }
+
   getCanvasData(x = 0, y = 0, { width, height } = this.props) {
     return this.ctx.getImageData(x, y, width, height);
   }
@@ -177,10 +195,11 @@ class WhiteBoard extends React.Component<propTypes> {
   }
 
   drawSelect(pageX: number, pageY: number, { sx, sy }: Points) {
+    this.ctx.save();
     this.ctx.setLineDash([2, 3]);
+    this.drawRect(pageX - 2, pageY - 2, { sx, sy });
     this.hasSelect = true;
-    this.drawRect(pageX, pageY, { sx, sy });
-    this.ctx.setLineDash([])
+    this.ctx.restore();
   }
 
   drawRect(pageX: number, pageY: number, { sx, sy }: any) {
@@ -197,6 +216,10 @@ class WhiteBoard extends React.Component<propTypes> {
   }
   // 是否在选区范围内
   withinSelectScope = (x: number, y: number) => {
+    const { brush } = this.pencil.options;
+    if (!this.hasSelect || brush != BrushShape.select) {
+      return false;
+    }
     const { sx, sy, ex, ey } = this.points;
 
     return x >= sx && x <= ex && y >= sy && y <= ey;

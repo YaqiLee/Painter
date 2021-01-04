@@ -79,7 +79,8 @@ class Toolbar extends React.Component<propTypes> {
   };
 
   onClickSelect = () => {
-    this.props.brushChange({ brush: BrushShape.select });
+    this.setState({ selectChild: "", brush: BrushShape.select });
+    this.props.brushChange({ brush: BrushShape.select, fill: false });
   };
 
   onClickParent = ({ currentTarget }: any) => {
