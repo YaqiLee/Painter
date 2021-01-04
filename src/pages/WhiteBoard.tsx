@@ -21,6 +21,7 @@ class WhiteBoard extends React.Component<propTypes> {
     px: 0, // 鼠标上一个位置
     py: 0,
   };
+  moving: boolean = false;
   hasSelect: boolean = false;
   // 是否开始画
   canDraw: boolean = false;
@@ -50,14 +51,16 @@ class WhiteBoard extends React.Component<propTypes> {
 
     if (history) {
       this.ctx.putImageData(history, 0, 0);
-      this.historys.push(history);
     }
+    return history;
   };
-
+  
   onCancelSelect = (x: number, y: number) => {
     if (this.hasSelect && !this.withinSelectScope(x, y)) {
       this.hasSelect = false;
-      this.onCancel();
+      const history = this.onCancel();
+      history && this.historys.push(history);
+
       return true;
     }
     return false;
@@ -80,6 +83,12 @@ class WhiteBoard extends React.Component<propTypes> {
 
   onMouseUp = ({ pageX, pageY }: MouseEvent<any>) => {
     this.canDraw = false;
+    // 移动完毕
+    if(this.moving) {
+      this.historys.push(this.getCanvasData());
+      this.moving = false;
+    }
+
     const { sx, sy } = this.points;
     // 使开始点永远是小于结束点
     if (pageX < sx) {
@@ -95,22 +104,48 @@ class WhiteBoard extends React.Component<propTypes> {
   };
 
   onMouseDown = ({ pageX, pageY }: MouseEvent<any>) => {
-    this.onCancelSelect(pageX, pageY);
+    this.canDraw = true;
 
-    this.initBrushSetting(pageX, pageY);
-
-    this.points.sx = pageX;
-    this.points.sy = pageY;
     this.points.px = pageX;
     this.points.py = pageY;
 
-    this.canDraw = true;
+    if (this.withinSelectScope(pageX, pageY)) {
+      const { sx, sy, ex, ey } = this.points;
+      const width = ex - sx;
+      const height = ey - sy;
+      // 损失了1像素，宽度-2因为起始点加1
+      this.canvasData[2] = this.ctx.getImageData(sx + 1, sy + 1, width -2, height - 2)
+      this.moving = true;
+      this.ctx.clearRect(sx - 1, sy - 1, width + 2, height + 2);
+      this.canvasData[1] = this.getCanvasData();
+      return;
+    }
+
+    this.points.sx = pageX;
+    this.points.sy = pageY;
+
+    this.onCancelSelect(pageX, pageY);
+    this.initBrushSetting(pageX, pageY);
+
     this.canvasData[0] = this.getCanvasData();
     this.historys.length <= 0 && this.historys.push(this.canvasData[0]);
   };
 
   onMouseMove = ({ pageX, pageY }: MouseEvent<any>) => {
-    this.canvas.style.cursor = "auto";
+    const { sx, sy, ex, ey, px, py } = this.points;
+    // 修改鼠标指针样式
+    if (this.moving) {
+      // this.restoreCanvas();
+
+      this.ctx.putImageData(this.canvasData[1], 0, 0);
+      // this.ctx.clearRect(sx - 1, sy - 1, ex - sx, ey - sy);
+      this.ctx.putImageData(
+        this.canvasData[2],
+        pageX - px + sx,
+        pageY - py + sy
+      );
+      return;
+    }
     if (this.canDraw === false) return;
     // 记录当前移动点的位置
     this.points.mx = pageX;
@@ -124,6 +159,7 @@ class WhiteBoard extends React.Component<propTypes> {
 
   onMouseLeave = () => {
     this.canDraw = false;
+    this.moving = false;
   };
 
   onMoveSelect = () => {};
@@ -161,15 +197,11 @@ class WhiteBoard extends React.Component<propTypes> {
   saveHistory() {
     const { sx, sy, ex, ey } = this.points;
     // 没有移动不保存历史
-    if(ex === sx  && ey === sy) {
-      return ;
+    if (ex === sx && ey === sy) {
+      return;
     }
-    console.log("save history");
-    
     this.canvasData[1] = this.getCanvasData();
     this.historys.push(this.canvasData[1]);
-    console.log(this.historys.length);
-    
   }
 
   getCanvasData(x = 0, y = 0, { width, height } = this.props) {
@@ -196,8 +228,9 @@ class WhiteBoard extends React.Component<propTypes> {
 
   drawSelect(pageX: number, pageY: number, { sx, sy }: Points) {
     this.ctx.save();
-    this.ctx.setLineDash([2, 3]);
-    this.drawRect(pageX - 2, pageY - 2, { sx, sy });
+    this.ctx.setLineDash([1, 3]);
+    this.ctx.lineWidth = 1;
+    this.drawRect(pageX, pageY, { sx, sy });
     this.hasSelect = true;
     this.ctx.restore();
   }
@@ -221,6 +254,8 @@ class WhiteBoard extends React.Component<propTypes> {
       return false;
     }
     const { sx, sy, ex, ey } = this.points;
+
+    console.log(sx, sy, ex, ey, x, y);
 
     return x >= sx && x <= ex && y >= sy && y <= ey;
   };
