@@ -59,20 +59,6 @@ class Pencil {
     this.renderShape();
   }
 
-  // getDrawFunc({ brush } = this.options) {
-  //   switch (brush) {
-  //     case BrushShape.rect:
-  //       return this.drawRect.bind(this);
-  //     case BrushShape.circle:
-  //       return this.drawCircle.bind(this);
-  //     case BrushShape.curve:
-  //     case BrushShape.line:
-  //       return this.drawLine.bind(this);
-  //     default:
-  //       return this.drawLine.bind(this);
-  //   }
-  // }
-
   clear(x: number, y: number, w: number, h: number) {
     this.ctx.clearRect(x, y, w, h);
   }

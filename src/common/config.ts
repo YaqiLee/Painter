@@ -17,6 +17,6 @@ export enum BrushShape {
 }
 
 export const KEY = {
-  SHIFT: 16,
-  DELETE: 46,
+  SHIFT: "Shift",
+  DELETE: "Delete",
 };

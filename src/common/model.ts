@@ -36,7 +36,7 @@ export interface Circle extends BaseShape {
 export interface Ellipse extends BaseShape {
   xEnd: number;
   yEnd: number;
-  fill: boolean;
+  fill?: boolean;
   lineWidth?: number;
 }
 

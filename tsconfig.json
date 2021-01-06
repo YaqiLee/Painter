@@ -9,7 +9,9 @@
     "skipLibCheck": true,
     "isolatedModules": true,
     "esModuleInterop": true,
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "inlineSourceMap": true,
+    "removeComments": true
   },
   "include": ["src"],
   "exclude": [

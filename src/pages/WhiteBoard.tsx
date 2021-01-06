@@ -1,13 +1,16 @@
-import React, { MouseEvent } from "react";
-import { BrushShape } from "../common/config";
+import React, { KeyboardEvent, MouseEvent } from "react";
+import { BrushShape, KEY } from "../common/config";
 import Pencil from "../common/Pencil";
 import Toolbar from "./Toolbar";
 import "./WhiteBoard.scss";
 import { Points } from "../common/model";
+import { Subject } from "rxjs";
 
 interface propTypes {
   width: number;
   height: number;
+  keyup: Subject<KeyboardEvent>;
+  keydown: Subject<KeyboardEvent>;
 }
 
 type History = {
@@ -36,6 +39,8 @@ class WhiteBoard extends React.Component<propTypes> {
   canvasRef: React.RefObject<HTMLCanvasElement>;
   canvasData: any = [];
   historys: History[] = []; // 保存历史数据
+
+  keyboard: string = "";
 
   constructor(props: any) {
     super(props);
@@ -71,11 +76,7 @@ class WhiteBoard extends React.Component<propTypes> {
       this.hasSelect = false;
       const history = this.onCancel();
       history && this.historys.push({ name: "保存撤销后的记录", history });
-      console.log("cancel");
-      
-      return true;
     }
-    return false;
   };
 
   onDownload = ({ currentTarget }: any) => {
@@ -91,6 +92,24 @@ class WhiteBoard extends React.Component<propTypes> {
   componentDidMount() {
     this.ctx = this.canvas.getContext("2d") as CanvasRenderingContext2D;
     this.pencil = new Pencil(this.ctx);
+
+    this.props.keydown.subscribe((event) => {
+      if (event.defaultPrevented) {
+        return; // Should do nothing if the default action has been cancelled
+      }
+      this.keyboard = event.key;
+      if (event.shiftKey) {
+        // shift
+        this.initBrushSetting();
+      }
+    });
+
+    this.props.keyup.subscribe((event) => {
+      if (event.key === KEY.SHIFT) {
+        this.keyboard = "";
+        this.initBrushSetting();
+      }
+    });
   }
 
   onMouseUp = ({ pageX, pageY }: MouseEvent<any>) => {
@@ -134,12 +153,13 @@ class WhiteBoard extends React.Component<propTypes> {
       this.canvasData[1] = this.getCanvasData();
       return;
     }
+    // 设置起始点之前，取消已存在的选区
     this.onCancelSelect(pageX, pageY);
 
     this.points.sx = pageX;
     this.points.sy = pageY;
 
-    this.initBrushSetting(pageX, pageY);
+    this.initBrushSetting();
 
     this.canvasData[0] = this.getCanvasData();
     // 历史记录不存在时
@@ -176,11 +196,16 @@ class WhiteBoard extends React.Component<propTypes> {
 
   onMoveSelect = () => {};
 
-  initBrushSetting(pageX: number, pageY: number) {
+  initBrushSetting() {
     const { brush } = this.pencil.options;
 
+    if (brush == BrushShape.line) {
+      this.draw = this.drawLine;
+      return;
+    }
+
     if (brush == BrushShape.curve) {
-      this.draw = this.drawCurve;
+      this.draw = this.keyboard === KEY.SHIFT ? this.drawLine : this.drawCurve;
       return;
     }
     if (brush == BrushShape.select) {
@@ -188,18 +213,14 @@ class WhiteBoard extends React.Component<propTypes> {
       return;
     }
 
-    if (brush == BrushShape.line) {
-      this.draw = this.drawLine;
-      return;
-    }
-
     if (brush == BrushShape.rect) {
-      this.draw = this.drawRect;
+      this.draw = this.keyboard === KEY.SHIFT ? this.drawSquare : this.drawRect;
       return;
     }
 
     if (brush == BrushShape.circle) {
-      this.draw = this.drawCircle;
+      this.draw =
+        this.keyboard === KEY.SHIFT ? this.drawCircle : this.drawEllipse;
       return;
     }
 
@@ -218,6 +239,13 @@ class WhiteBoard extends React.Component<propTypes> {
 
   getCanvasData(x = 0, y = 0, { width, height } = this.props) {
     return this.ctx.getImageData(x, y, width, height);
+  }
+
+  drawEllipse(pageX: number, pageY: number, { sx, sy }: Points) {
+    const [x, y] = [sx, sy];
+    const [xEnd, yEnd] = [pageX - x, pageY - y];
+    this.restoreCanvas();
+    this.pencil.drawEllipse({ x, y, xEnd, yEnd });
   }
 
   drawCircle(pageX: number, pageY: number, { sx, sy }: Points) {
@@ -247,12 +275,17 @@ class WhiteBoard extends React.Component<propTypes> {
     this.ctx.restore();
   }
 
-  drawRect(pageX: number, pageY: number, { sx, sy }: any) {
+  drawRect(pageX: number, pageY: number | null, { sx, sy }: any) {
     const [x, y] = [sx, sy];
     const width = pageX - x;
-    const height = pageY - y;
+    const height = pageY ? pageY - y : width;
     this.restoreCanvas();
     this.pencil.drawRect({ x, y, width, height });
+  }
+
+  drawSquare(pageX: number, pageY: number, {}: Points) {
+    const px = Math.max(pageX, pageY);
+    this.drawRect(px, null, this.points);
   }
   // 清空画布，填上之前的数据
   restoreCanvas() {
